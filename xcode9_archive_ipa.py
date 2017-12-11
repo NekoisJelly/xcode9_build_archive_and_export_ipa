@@ -10,6 +10,7 @@
 import os
 import sys
 import plistlib
+import re
 
 
 # 设置签名信息,bxzw
@@ -52,9 +53,14 @@ def build_target(nickname, target, sign_info, cur_plist, version, bundleid):
 
     # create .xcarchive
     print("------------------------------xcarchive--------------------------------")
-    print('xcodebuild -scheme {0} -archivePath {1} archive PROVISIONING_PROFILE_SPECIFIER=\'{2}\' PRODUCT_BUNDLE_IDENTIFIER=\'{3}\' DEVELOPMENT_TEAM=\'{4}\' CODE_SIGN_IDENTITY=\'{5}\' '.format(target,cur_xcarchive,sign_info[1],bundleid,sign_info[4],sign_info[0]))
+        if get_xcode_version() == '7':
+        print('xcodebuild -scheme {0} -archivePath {1} archive PROVISIONING_PROFILE=\'{2}\' PRODUCT_BUNDLE_IDENTIFIER=\'{3}\' DEVELOPMENT_TEAM=\'{4}\' CODE_SIGN_IDENTITY=\'{5}\' '.format(target,cur_xcarchive,sign_info[1],bundleid,sign_info[4],sign_info[0]))
         
-    str_create_xcarchive = 'xcodebuild -scheme {0} -archivePath {1} archive PROVISIONING_PROFILE_SPECIFIER=\'{2}\' PRODUCT_BUNDLE_IDENTIFIER=\'{3}\' DEVELOPMENT_TEAM=\'{4}\' CODE_SIGN_IDENTITY=\'{5}\' '.format(target,cur_xcarchive,sign_info[1],bundleid,sign_info[4],sign_info[0])
+        str_create_xcarchive = 'xcodebuild -scheme {0} -archivePath {1} archive PROVISIONING_PROFILE=\'{2}\' PRODUCT_BUNDLE_IDENTIFIER=\'{3}\' DEVELOPMENT_TEAM=\'{4}\' CODE_SIGN_IDENTITY=\'{5}\' '.format(target,cur_xcarchive,sign_info[1],bundleid,sign_info[4],sign_info[0])
+    elif get_xcode_version() == '9':
+        print('xcodebuild -scheme {0} -archivePath {1} archive PROVISIONING_PROFILE_SPECIFIER=\'{2}\' PRODUCT_BUNDLE_IDENTIFIER=\'{3}\' DEVELOPMENT_TEAM=\'{4}\' CODE_SIGN_IDENTITY=\'{5}\' '.format(target,cur_xcarchive,sign_info[1],bundleid,sign_info[4],sign_info[0]))
+        
+        str_create_xcarchive = 'xcodebuild -scheme {0} -archivePath {1} archive PROVISIONING_PROFILE_SPECIFIER=\'{2}\' PRODUCT_BUNDLE_IDENTIFIER=\'{3}\' DEVELOPMENT_TEAM=\'{4}\' CODE_SIGN_IDENTITY=\'{5}\' '.format(target,cur_xcarchive,sign_info[1],bundleid,sign_info[4],sign_info[0])
     os_ret = os.system(str_create_xcarchive)
     if os_ret == 2:
         print("\n [Ctrl + C] 您终止了打包过程!")
@@ -90,6 +96,13 @@ def build_plist():
         plistlib.writePlist(pl, 'export.plist')
     except Exception as e:
         print(e)
+
+
+def get_xcode_version():
+    r = os.popen('xcode-select -p').read()
+    s = re.sub(r'Developer\n','version.plist', r)
+    pl = plistlib.readPlist(s)
+    return pl['CFBundleShortVersionString'][0]
 
 
 def build():
